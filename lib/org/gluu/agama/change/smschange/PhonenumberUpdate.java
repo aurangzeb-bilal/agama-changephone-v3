@@ -468,7 +468,8 @@ public class PhonenumberUpdate extends UserphoneUpdate {
         return new String(otp);
     }
 
-    public boolean sendOTPCode(String username, String phone) {
+  //  public boolean sendOTPCode(String username, String phone) {
+    
         try {
             // Get user preferred language from profile
             User user = getUserService().getUser(username);
