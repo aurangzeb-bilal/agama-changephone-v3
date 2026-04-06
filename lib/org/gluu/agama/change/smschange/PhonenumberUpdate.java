@@ -289,13 +289,14 @@ public class PhonenumberUpdate extends UserphoneUpdate {
     private String getSingleValuedAttr(User user, String attribute) {
         Object value = null;
         if (attribute.equals(UID)) {
-            // user.getAttribute("uid", true, false) always returns null :(
             value = user.getUserId();
+        } else if (attribute.equals("jansStatus")) {
+            // jansStatus is a first-class field on User — read it directly
+            value = user.getStatus() != null ? user.getStatus().getValue() : null;
         } else {
             value = user.getAttribute(attribute, true, false);
         }
         return value == null ? null : value.toString();
-
     }
 
     private User getUser(String attributeName, String value) {
@@ -401,26 +402,52 @@ public class PhonenumberUpdate extends UserphoneUpdate {
 
     public boolean isPhoneUnique(String username, String phone) {
         try {
-            // Normalize phone number
-            String normalizedPhone = phone.startsWith("+") ? phone : "+" + phone;
+            logger.info("=== isPhoneUnique() called for user: {}, phone: {} ===", username, phone);
 
-            // Check DB for existing users
-            List<User> users = getUserService().getUsersByAttribute("mobile", normalizedPhone, true, 10);
+            UserService userService = getUserService();
+            if (userService == null) {
+                logger.error("UserService is NULL in isPhoneUnique()");
+                return false;
+            }
+
+            String normalizedPhone = phone.startsWith("+") ? phone : "+" + phone;
+            logger.info("Normalized phone: {}", normalizedPhone);
+
+            List<User> users = userService.getUsersByAttribute("mobile", normalizedPhone, true, 10);
+            logger.info("LDAP search result size: {}", users != null ? users.size() : "NULL");
 
             if (users != null && !users.isEmpty()) {
+
                 for (User u : users) {
-                    if (!u.getUserId().equalsIgnoreCase(username)) {
-                        logger.info("Phone {} is NOT unique. Already used by {}", phone, u.getUserId());
-                        return false; // duplicate
+
+                    if (u.getUserId().equalsIgnoreCase(username)) {
+                        continue;
+                    }
+
+                    User fullUser = userService.getUser(u.getUserId(), "uid", "jansStatus");
+
+                    logger.info("Direct getStatus() = {}", fullUser.getStatus());
+                    logger.info("getAttribute jansStatus = {}", fullUser.getAttribute("jansStatus", true, false));
+
+                    String status = getSingleValuedAttr(fullUser, "jansStatus");
+
+                    logger.info("Found user {} with jansStatus {}", fullUser.getUserId(), status);
+
+                    if (status == null || "active".equalsIgnoreCase(status)) {
+
+                        logger.info("Phone {} already used by ACTIVE user {}", phone, u.getUserId());
+                        return false;
+
                     }
                 }
             }
 
-            logger.info("Phone {} is unique", phone);
+            logger.info("Phone {} allowed (either not exists or user inactive)", phone);
             return true;
+
         } catch (Exception e) {
-            logger.error("Error checking phone uniqueness for {}", phone, e);
-            return false; // safest default on error
+            logger.error("Error checking phone uniqueness for {}: {}", phone, e.getMessage(), e);
+            return false;
         }
     }
 
@@ -468,8 +495,7 @@ public class PhonenumberUpdate extends UserphoneUpdate {
         return new String(otp);
     }
 
-  //  public boolean sendOTPCode(String username, String phone) {
-    
+    public boolean sendOTPCode(String username, String phone, String verificationMethod) {
         try {
             // Get user preferred language from profile
             User user = getUserService().getUser(username);
@@ -501,28 +527,18 @@ public class PhonenumberUpdate extends UserphoneUpdate {
 
             String message = messages.getOrDefault(lang, messages.get("en"));
 
-            // Determine which FROM_NUMBER to use based on country code
-            String fromNumber = getFromNumberForPhone(phone);
-            
-            if (fromNumber == null || fromNumber.trim().isEmpty()) {
-                logger.error("FROM_NUMBER is null or empty, cannot send OTP to {}", phone);
-                return false;
-            }
+            // sendTwilioSms(phone, message, verificationMethod);
+            sendTwilioSms(phone, message, verificationMethod, otpCode, lang);
 
-            // Send SMS
-            PhoneNumber FROM_NUMBER = new PhoneNumber(fromNumber);
-            PhoneNumber TO_NUMBER = new PhoneNumber(phone);
-
-            Twilio.init(flowConfig.get("ACCOUNT_SID"), flowConfig.get("AUTH_TOKEN"));
-            Message.creator(TO_NUMBER, FROM_NUMBER, message).create();
-
-            logger.info("OTP sent to {} using sender {}", phone, fromNumber);
+            logger.info("OTP sent to {} for user {}", phone, username);
             return true;
         } catch (Exception ex) {
             logger.error("Failed to send OTP to {}. Error: {}", phone, ex.getMessage(), ex);
             return false;
         }
     }
+
+    
 
     /**
      * Determines which FROM_NUMBER to use based on the phone number's country code.
