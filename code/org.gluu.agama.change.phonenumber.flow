@@ -36,20 +36,21 @@ Repeat 6 times max
                     uiFeedback.errorMessage = "User not registered with this UserName"
                Otherwise
                     Log "@info Input Phone number page "
-                    ValidMobileNum = Repeat 10 times max
+                    ValidMobileNum = Repeat 5 times max
                          // Display update user page
                          phoneInput = RRF "InputMobileNumber.ftlh" uiFeedback
                          phone = phoneInput.phoneNumber
+                         verificationMethod = phoneInput.verificationMethod
                          // "Check phone number for user +++++++:" phone
                          Log "@info Check phone number for user +++++++:" phone
                          UniqueNumber = Call PhonenumberUpdateService isPhoneUnique username phone
                          When UniqueNumber is true
                               // sent sms otp
-                              smsOtpSend = Call PhonenumberUpdateService sendOTPCode username phone
+                              smsOtpSend = Call PhonenumberUpdateService sendOTPCode username phone verificationMethod
                               // The OTP Code has been send to user.
                               Log "@info OTP generated and send to: " phone
                               // Trigger OTP subflow
-                              otpFeedBack = Trigger org.gluu.agama.change.smsotp PhonenumberUpdateService username phone
+                              otpFeedBack = Trigger org.gluu.agama.change.smsotp PhonenumberUpdateService username phone verificationMethod
                               // OTP Code validation is completed.
                               Log "@info OTP Code validation completed with status: " otpFeedBack
                               // Check if OTP validation vas okay
@@ -88,16 +89,6 @@ Repeat 6 times max
                               Log "@info This phone is already used by another account. Please enter a different one."
                               uiFeedback.errorMessage = "This phone is already used by another account. Please enter a different one."
                               uiFeedback.infoMessage = "Please enter a new number"
-                              max = Repeat 4 times max
-                                   otpCred = RRF "smsOtp.ftlh" uiFeedback
-                                   //  Validate the OTP code provided by the user.
-                                   otpValidationResults = Call PhonenumberUpdateService validateOTPCode phone otpCred.code
-                                   When otpValidationResults is true
-                                        uiFeedback.infoMessage = "Invalid code provided."
-                                   Otherwise
-                                        uiFeedback.errorMessage = "Invalid code provided."
-                              it_ootpmax = { success: false, error: "ExceededTheNumberOfAttemptsAllowed" }
-                              Finish it_ootpmax
                     // "Phone loop completed"
                     Log "@info Phone loop completed"
                     // { success: false, error: "ExceededTheNumberOfAttemptsAllowed" }
@@ -106,5 +97,5 @@ Repeat 6 times max
 //  Maximum attempt reached
 Log "@info Maximum attempt reached"
 //  User Registration flow failed
-it_zxfhb = {success:false, error: "User update flow reached max attempts try later"}
-Finish it_zxfhb
+it_wmysz = {success:false, error: "User update flow reached max attempts try later"}
+Finish it_wmysz
