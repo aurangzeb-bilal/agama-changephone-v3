@@ -16,11 +16,24 @@
     "noDirectLaunch": [],
     "configs": {
         "org.gluu.agama.change.phonenumber": {
-            "PRIVATE_KEY": "your_private_key_here",
-            "PUBLIC_KEY": "your_public_key_here",
-            "ACCOUNT_SID": "PUT_YOUR_TWILIO_ACCOUNT_SID_HERE",
-            "AUTH_TOKEN": "PUT_YOUR_TWILIO_AUTH_TOKEN_HERE",
-            "FROM_NUMBER": "PUT_YOUR_TWILIO_FROM_NUMBER_HERE"
+            "PRIVATE_KEY": "",
+            "PUBLIC_KEY": "",
+            "ACCOUNT_SID": "",
+            "AUTH_TOKEN": "",
+            "FROM_NUMBER": "PHIWALLET",
+            "FROM_NUMBER_RESTRICTED_COUNTRIES": "+351927922203",
+            "FROM_NUMBER_US": "+18257863732",
+            "US_COUNTRY_CODES": "1",
+            "RESTRICTED_COUNTRY_CODES": "27,32,36,56,57,60,64,82,86,503,505,506,507,593,594,595,598,674,886,963",
+            "API_BASE_URL": "https://api.phiwallet.dev",
+            "FROM_NUMBER_WHATSAPP": "+351927922203",
+            "WHATSAPP_CONTENT_SID_EN": "HXf2c5011c6929bd9d38ee35af793dd7fb",
+            "WHATSAPP_CONTENT_SID_AR": "HXdb34d514717a4fb6f04d0919d3cdfe91",
+            "WHATSAPP_CONTENT_SID_ES": "HXda4b1299a0e39ad963bba7578df0341f",
+            "WHATSAPP_CONTENT_SID_FR": "HXaee969b7bb2238af005564fac5cb7ea8",
+            "WHATSAPP_CONTENT_SID_ID": "HX3e065bc1144c7db6bb286d0ab11b4291",
+            "WHATSAPP_CONTENT_SID_PT": "HX967b66630b52603b4b4e1c30d29759f7"
+            
         },
         "org.gluu.agama.change.smsotp": {}
     },
